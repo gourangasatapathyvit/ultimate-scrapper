@@ -33,31 +33,16 @@ def getTorrentsList(search_key):
         col1 = cols[0].find_all("a")[1]
         name = col1.text
         urlContent = "https://1337x.unblockit.boo" + col1['href']
-        # response = scraper.get(urlContent).content
-        # dataPage = BeautifulSoup(response, 'lxml')
-        # magnetData = gettorrentdata(urlContent)
-        # adtionalMetaData = dataPage.find_all('ul', {'class': 'list'})
-        # adtionalMetaData = adtionalMetaData[1].find_all('li')
-        # uflixLink = dataPage.find('a', id= 'l837afe5cf495ce3e74d6b938f950f625a02013a8')
 
-       
         data.append(
             {
                 "name": name,
                 "url": urlContent,
-                # "magnetUrl": magnetData['magnet'],
-                # "webTor":f'https://webtor.io/show?magnet={ magnetData["magnet"]}',
-                # "uflix":uflixLink['href'] if uflixLink != None else "Not Available",
                 "seeds": cols[1].text,
                 "leeches": cols[2].text,
-                # "metaData": {
-                #     "uploader": cols[5].text,
-                #     "size": f'{cols[4].text.split("GB",1)[0]}GB',
-                #     "date": cols[3].text,
-                #     "itemType":adtionalMetaData[0].find('span').text,
-                #     "language":adtionalMetaData[2].find('span').text
-
-                # }
+                "uploader": cols[5].text,
+                "size": f'{cols[4].text.split("GB",1)[0]}GB',
+                "uploaded at": cols[3].text,
             }
         )
     return data
@@ -68,7 +53,23 @@ def gettorrentdata(link):
     response = scraper.get(link).content
     soup = BeautifulSoup(response, 'lxml')
     magnet = soup.find("a", href=re.compile(r'[magnet]([a-z]|[A-Z])\w+'), class_=True).attrs["href"]
+    adtionalMetaData = soup.find_all('ul', {'class': 'list'})
+    adtionalMetaDataLeft = adtionalMetaData[1].find_all('li')
+    adtionalMetaDataRight = adtionalMetaData[2].find_all('li')
+    uflixLink = f"https://uflix.cc/search?keyword={soup.find('a', href=re.compile(r'/movie/')).text}"
+
     data["magnet"] = magnet
+    data["webTor"]=f'https://webtor.io/show?magnet={magnet}'
+    data["uflix"]=uflixLink if uflixLink != None else "Not Available"
+    data["metaData"] = {
+        "Category":adtionalMetaDataLeft[0].find('span').text,
+        "language":adtionalMetaDataLeft[2].find('span').text,
+        "uploader":adtionalMetaDataLeft[4].find('span').text,
+        "size":adtionalMetaDataLeft[3].find('span').text,
+        "seeds": adtionalMetaDataRight[3].find('span').text,
+        "leeches": adtionalMetaDataRight[4].find('span').text,
+
+    }
     return data
 
 
