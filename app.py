@@ -8,6 +8,8 @@ from flask import Flask, request, Response
 from dotenv import load_dotenv
 load_dotenv()
 
+headers = {"User-Agent": "Mozilla/5.0 (Linux; U; Android 4.2.2; he-il; NEO-X5-116A Build/JDQ39) AppleWebKit/534.30 ("
+                         "KHTML, like Gecko) Version/4.0 Safari/534.30"}
 
 sitesAvailable = [{"id": 1, "name": "1337x"}, {"id": 2, "name": "yifytorrent"}]
 scraper = cloudscraper.create_scraper(delay=6, browser='chrome')
@@ -26,7 +28,7 @@ home = [
 
 def yifytorrent(search_key, year):
     URL = f"https://yifytorrent.unblockit.boo/search/{search_key}/p-1/all/all/"
-    response = scraper.get(URL).content
+    response = scraper.get(URL,headers=headers).content
     soup = BeautifulSoup(response, 'lxml')
     soupRes = soup.find_all("article", {'class': 'img-item'})
     yifyList = []
@@ -50,7 +52,7 @@ def yifytorrent(search_key, year):
 
 
 def getTorrentsList(search_key):
-    res = requests.get(f"{os.getenv('host')}/search?query={search_key}")
+    res = requests.get(f"{os.getenv('host')}/search?query={search_key}",headers=headers)
     finalData = []
 
     for i in res.json()['results']:
@@ -63,7 +65,7 @@ def getTorrentsList(search_key):
         if (True):
             torrentData = []
             URL = f"https://1337x.unblockit.boo/search/{i['title']} {i['year']}/1/"
-            response = scraper.get(URL).content
+            response = scraper.get(URL,headers=headers).content
             soup = BeautifulSoup(response, 'lxml')
             results = soup.find('tbody')
             results = soup.find_all('tr')
@@ -93,10 +95,10 @@ def getTorrentsList(search_key):
 
 def gettorrentdata(link, imdbPath):
     itemDetails = []
-    res = requests.get(f"{os.getenv('host')}{imdbPath}")
+    res = requests.get(f"{os.getenv('host')}{imdbPath}",headers=headers)
     itemDetails.append(res.json())
     alldataLinks = {}
-    response = scraper.get(link).content
+    response = scraper.get(link,headers=headers).content
     soup = BeautifulSoup(response, 'lxml')
     magnet = soup.find("a", href=re.compile(
         r'[magnet]([a-z]|[A-Z])\w+'), class_=True).attrs["href"]
@@ -126,7 +128,7 @@ app = Flask(__name__)
 
 @app.route("/", methods=["GET"])
 def index():
-    return Response(json.dumps(home), mimetype="application/json")
+    return Response(request.args.get("a"))
 
 
 @app.route("/sites", methods=["GET"])
@@ -158,4 +160,4 @@ def getTorrentData():
 
 
 if __name__ == "__main__":
-    app.run(debug=False, host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0')
