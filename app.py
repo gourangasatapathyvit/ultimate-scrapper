@@ -12,7 +12,9 @@ headers = {"User-Agent": "Mozilla/5.0 (Linux; U; Android 4.2.2; he-il; NEO-X5-11
                          "KHTML, like Gecko) Version/4.0 Safari/534.30"}
 
 sitesAvailable = [{"id": 1, "name": "1337x"}, {"id": 2, "name": "yifytorrent"}]
-scraper = cloudscraper.create_scraper(delay=6, browser='chrome')
+scraper = cloudscraper.create_scraper(
+    delay=6, browser='chrome', disableCloudflareV1=True)
+finalData = []
 
 home = [
     {"route_id": 1, "route_name": "Home", "route_url": "/",
@@ -28,7 +30,7 @@ home = [
 
 def yifytorrent(search_key, year):
     URL = f"https://yifytorrent.unblockit.boo/search/{search_key}/p-1/all/all/"
-    response = scraper.get(URL,headers=headers).content
+    response = scraper.get(URL, headers=headers).content
     soup = BeautifulSoup(response, 'lxml')
     soupRes = soup.find_all("article", {'class': 'img-item'})
     yifyList = []
@@ -51,21 +53,26 @@ def yifytorrent(search_key, year):
     return yifyList
 
 
+def Yts(queryTerm):
+    return requests.get(f"https://yts.torrentbay.to/api/v2/list_movies.json?query_term={queryTerm}", headers=headers)
+
+
 def getTorrentsList(search_key):
-    res = requests.get(f"{os.getenv('host')}/search?query={search_key}",headers=headers)
-    finalData = []
+    res = requests.get(
+        f"{os.getenv('host')}/search?query={search_key}", headers=headers)
 
     for i in res.json()['results']:
         eachData = {}
         eachData['metaData'] = [
             i
         ]
-        eachData['YIFY'] = yifytorrent(i['title'].lower(), i['year'])
+        # eachData['YIFY'] = yifytorrent(i['title'].lower(), i['year'])
+        eachData['YTS'] = Yts(i['title'].lower()).json()
 
         if (True):
             torrentData = []
             URL = f"https://1337x.unblockit.boo/search/{i['title']} {i['year']}/1/"
-            response = scraper.get(URL,headers=headers).content
+            response = scraper.get(URL, headers=headers).content
             soup = BeautifulSoup(response, 'lxml')
             results = soup.find('tbody')
             results = soup.find_all('tr')
@@ -95,10 +102,10 @@ def getTorrentsList(search_key):
 
 def gettorrentdata(link, imdbPath):
     itemDetails = []
-    res = requests.get(f"{os.getenv('host')}{imdbPath}",headers=headers)
+    res = requests.get(f"{os.getenv('host')}{imdbPath}", headers=headers)
     itemDetails.append(res.json())
     alldataLinks = {}
-    response = scraper.get(link,headers=headers).content
+    response = scraper.get(link, headers=headers).content
     soup = BeautifulSoup(response, 'lxml')
     magnet = soup.find("a", href=re.compile(
         r'[magnet]([a-z]|[A-Z])\w+'), class_=True).attrs["href"]
@@ -128,7 +135,40 @@ app = Flask(__name__)
 
 @app.route("/", methods=["GET"])
 def index():
-    return Response(request.args.get("a"))
+
+    eachData = {}
+    # response = requests.get("https://1337x.unblockit.boo/", headers=headers)
+    # webpage = response.content
+    # soup = BeautifulSoup(webpage, "html.parser")
+    # return Response(soup.find('title').text)
+    if (True):
+        torrentData = []
+        URL = f"https://1337x.unblockit.boo/search/rrr/1/"
+        response = scraper.get(URL, headers=headers).content
+        soup = BeautifulSoup(response, 'lxml')
+        results = soup.find('tbody')
+        results = soup.find_all('tr')
+        if (len(results) > 0):
+            results.pop(0)
+
+        for i in results:
+            cols = i.find_all("td")
+            col1 = cols[0].find_all("a")[1]
+            name = col1.text
+            urlContent = "https://1337x.unblockit.boo" + col1['href']
+            torrentData.append(
+                {
+                    "name": name,
+                    "url": urlContent,
+                    "uploader": cols[5].text,
+                    "size": f'{cols[4].text.split("GB",1)[0]}GB',
+                    "uploaded at": cols[3].text,
+                    "source": "1337x"
+                }
+            )
+        eachData['1337X'] = torrentData
+
+    return Response(json.dumps(torrentData), mimetype="application/json")
 
 
 @app.route("/sites", methods=["GET"])
