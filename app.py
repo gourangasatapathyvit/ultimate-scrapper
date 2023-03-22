@@ -72,7 +72,7 @@ def getTorrentsList(search_key):
 
         if (True):
             torrentData = []
-            URL = f"https://1337x.unblockit.boo/search/{i['title']} {i['year']}/1/"
+            URL = f"https://1337x.to/search/{i['title']} {i['year']}/1/"
             response = scraper.get(URL, headers=headers).content
             soup = BeautifulSoup(response, 'lxml')
             results = soup.find('tbody')
@@ -84,7 +84,7 @@ def getTorrentsList(search_key):
                 cols = i.find_all("td")
                 col1 = cols[0].find_all("a")[1]
                 name = col1.text
-                urlContent = "https://1337x.unblockit.boo" + col1['href']
+                urlContent = "https://1337x.to" + col1['href']
                 torrentData.append(
                     {
                         "name": name,
@@ -144,7 +144,7 @@ def index():
     # return Response(soup.find('title').text)
     if (True):
         torrentData = []
-        URL = f"https://1337x.unblockit.boo/search/rrr/1/"
+        URL = f"https://1337x.to/search/rrr/1/"
         response = scraper.get(URL, headers=headers).content
         soup = BeautifulSoup(response, 'lxml')
         results = soup.find('tbody')
@@ -156,7 +156,7 @@ def index():
             cols = i.find_all("td")
             col1 = cols[0].find_all("a")[1]
             name = col1.text
-            urlContent = "https://1337x.unblockit.boo" + col1['href']
+            urlContent = "https://1337x.to" + col1['href']
             torrentData.append(
                 {
                     "name": name,
