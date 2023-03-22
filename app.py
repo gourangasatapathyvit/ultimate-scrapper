@@ -58,6 +58,7 @@ def Yts(queryTerm):
 
 
 def getTorrentsList(search_key):
+    finalData = []
     res = requests.get(
         f"{os.getenv('host')}/search?query={search_key}", headers=headers)
 
