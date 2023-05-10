@@ -61,42 +61,42 @@ def getTorrentsList(search_key):
     finalData = []
     res = requests.get(
         f"{os.getenv('host')}/search?query={search_key}", headers=headers)
-
     for i in res.json()['results']:
-        eachData = {}
-        eachData['metaData'] = [
-            i
-        ]
-        # eachData['YIFY'] = yifytorrent(i['title'].lower(), i['year'])
-        eachData['YTS'] = Yts(i['title'].lower()).json()
+        if ('year' in i):
+            eachData = {}
+            eachData['metaData'] = [
+                i
+            ]
+            # eachData['YIFY'] = yifytorrent(i['title'].lower(), i['year'])
+            eachData['YTS'] = Yts(i['title'].lower()).json()
 
-        if (True):
-            torrentData = []
-            URL = f"https://1337x.to/search/{i['title']} {i['year']}/1/"
-            response = scraper.get(URL, headers=headers).content
-            soup = BeautifulSoup(response, 'lxml')
-            results = soup.find('tbody')
-            results = soup.find_all('tr')
-            if (len(results) > 0):
-                results.pop(0)
+            if (True):
+                torrentData = []
+                URL = f"https://1337x.to/search/{i['title']} {i['year']}/1/"
+                response = scraper.get(URL, headers=headers).content
+                soup = BeautifulSoup(response, 'lxml')
+                results = soup.find('tbody')
+                results = soup.find_all('tr')
+                if (len(results) > 0):
+                    results.pop(0)
 
-            for i in results:
-                cols = i.find_all("td")
-                col1 = cols[0].find_all("a")[1]
-                name = col1.text
-                urlContent = "https://1337x.to" + col1['href']
-                torrentData.append(
-                    {
-                        "name": name,
-                        "url": urlContent,
-                        "uploader": cols[5].text,
-                        "size": f'{cols[4].text.split("GB",1)[0]}GB',
-                        "uploaded at": cols[3].text,
-                        "source": "1337x"
-                    }
-                )
-            eachData['1337X'] = torrentData
-        finalData.append(eachData)
+                for i in results:
+                    cols = i.find_all("td")
+                    col1 = cols[0].find_all("a")[1]
+                    name = col1.text
+                    urlContent = "https://1337x.to" + col1['href']
+                    torrentData.append(
+                        {
+                            "name": name,
+                            "url": urlContent,
+                            "uploader": cols[5].text,
+                            "size": f'{cols[4].text.split("GB",1)[0]}GB',
+                            "uploaded at": cols[3].text,
+                            "source": "1337x"
+                        }
+                    )
+                eachData['1337X'] = torrentData
+            finalData.append(eachData)
 
     return finalData
 
